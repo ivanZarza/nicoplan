@@ -80,6 +80,13 @@ function setupEventListeners() {
   // Upload horario & OCR
   document.getElementById('btn-upload-horario').addEventListener('click', uploadHorario);
   document.getElementById('foto-horario').addEventListener('change', handleFotoChange);
+
+  // Notas Semanales (Autoguardado)
+  document.getElementById('week-notes').addEventListener('change', async (e) => {
+    if (!currentWeekId) return;
+    const refPath = dbRef(db, `semanas/${currentWeekId}/notas`);
+    await set(refPath, e.target.value || null);
+  });
 }
 
 function showPin(userId) {
@@ -207,6 +214,16 @@ function openWeek(weekId, dateObj) {
 function renderWeek(weekId) {
   const tbody = document.getElementById('weekly-tbody');
   tbody.innerHTML = '';
+
+  // Actualizar números de los días en la cabecera
+  currentWeekDates.forEach((dateStr, idx) => {
+    const d = new Date(dateStr);
+    document.getElementById(`th-${idx}`).textContent = d.getDate();
+  });
+
+  // Cargar notas
+  const notas = dbData.semanas[weekId]?.notas || '';
+  document.getElementById('week-notes').value = notas;
 
   const turnosLV = [
     { id: 'llevar', name: '🚗 Llevar' },

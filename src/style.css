@@ -267,6 +267,7 @@ header {
 }
 .dot.ivan { background: var(--color-ivan); }
 .dot.iria { background: var(--color-iria); }
+.dot.dudas { background: #9ca3af; }
 
 /* -------------------
    WEEKLY VIEW
@@ -326,14 +327,39 @@ td:first-child {
   border-color: var(--color-iria);
 }
 
+.turn-selector.dudas {
+  background-color: #f3f4f6;
+  color: #6b7280;
+  border-color: #d1d5db;
+}
+
 /* -------------------
-   SUMMARY & HORARIOS
+   SUMMARY, NOTES & HORARIOS
 ------------------- */
-.weekly-summary, .upload-section {
+.weekly-summary, .upload-section, .weekly-notes {
   background: var(--surface-color);
   padding: 20px;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+}
+
+.weekly-notes {
+  margin-bottom: 20px;
+}
+
+.weekly-notes h3 {
+  margin-bottom: 10px;
+}
+
+.weekly-notes textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  resize: vertical;
 }
 
 .upload-section {
