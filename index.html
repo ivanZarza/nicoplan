@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NicoPlan 🏖️</title>
-    <script type="module" crossorigin src="/nicoplan/assets/index-MhwPDNXw.js"></script>
-    <link rel="stylesheet" crossorigin href="/nicoplan/assets/index-BhGLy4qK.css">
+    <script type="module" crossorigin src="/nicoplan/assets/index-CtOWemlF.js"></script>
+    <link rel="stylesheet" crossorigin href="/nicoplan/assets/index-DswjQ3tQ.css">
   </head>
   <body>
     <!-- CONTENEDOR PRINCIPAL -->
@@ -61,21 +61,32 @@
           <div id="weekly-view" class="tab-content hidden">
             <h2 id="current-week-display">Semana 28 (6-12 Jul)</h2>
             <div class="table-container">
-              <table id="weekly-table">
+              <table>
                 <thead>
                   <tr>
                     <th>Turno</th>
-                    <th>L</th><th>M</th><th>X</th><th>J</th><th>V</th><th>S</th><th>D</th>
+                    <th>L</br><small id="th-0"></small></th>
+                    <th>M</br><small id="th-1"></small></th>
+                    <th>X</br><small id="th-2"></small></th>
+                    <th>J</br><small id="th-3"></small></th>
+                    <th>V</br><small id="th-4"></small></th>
+                    <th>S</br><small id="th-5"></small></th>
+                    <th>D</br><small id="th-6"></small></th>
                   </tr>
                 </thead>
                 <tbody id="weekly-tbody">
-                  <!-- Filas de turnos se renderizan aquí -->
+                  <!-- JS rows -->
                 </tbody>
               </table>
             </div>
-            
+
+            <div class="weekly-notes">
+              <h3>📝 Notas de la semana</h3>
+              <textarea id="week-notes" placeholder="Apuntes, excursiones, menús..."></textarea>
+            </div>
+
             <div class="weekly-summary" id="weekly-summary">
-              <!-- Recuento semanal -->
+              <!-- JS summary -->
             </div>
           </div>
 
