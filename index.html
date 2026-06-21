@@ -91,9 +91,15 @@
               </table>
             </div>
 
-            <div class="weekly-notes">
-              <h3>📝 Notas de la semana</h3>
-              <textarea id="week-notes" placeholder="Apuntes, excursiones, menús..."></textarea>
+            <div class="weekly-notes-container">
+              <h3>📝 Notas y Recordatorios</h3>
+              <div id="notes-list" class="notes-list">
+                <!-- Notas JS -->
+              </div>
+              <div class="add-note-box">
+                <textarea id="new-note-text" placeholder="Escribe un apunte, excursión..."></textarea>
+                <button id="btn-add-note" class="btn btn-primary">Añadir Nota</button>
+              </div>
             </div>
 
             <div class="weekly-summary" id="weekly-summary">

@@ -249,6 +249,18 @@ header {
   display: block;
 }
 
+.cal-day.today {
+  border: 2px solid var(--color-ivan) !important;
+}
+
+.cal-day.today .date-num {
+  background: var(--color-ivan);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  display: inline-block;
+}
+
 .turn-dots {
   display: flex;
   flex-wrap: wrap;
@@ -369,29 +381,101 @@ td:first-child {
 /* -------------------
    SUMMARY, NOTES & HORARIOS
 ------------------- */
-.weekly-summary, .upload-section, .weekly-notes {
+.weekly-summary, .upload-section, .weekly-notes-container {
   background: var(--surface-color);
   padding: 20px;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-}
-
-.weekly-notes {
   margin-bottom: 20px;
 }
 
-.weekly-notes h3 {
-  margin-bottom: 10px;
+.weekly-notes-container h3 {
+  margin-bottom: 15px;
 }
 
-.weekly-notes textarea {
+.notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.note-card {
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  font-size: 0.95rem;
+}
+
+.note-card.ivan {
+  background: var(--color-ivan-light);
+  border-color: #bfdbfe;
+}
+
+.note-card.iria {
+  background: var(--color-iria-light);
+  border-color: #fed7aa;
+}
+
+.note-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.note-author {
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.note-card.ivan .note-author { color: var(--color-ivan); }
+.note-card.iria .note-author { color: var(--color-iria); }
+
+.note-time {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: normal;
+  margin-left: 5px;
+}
+
+.note-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 5px;
+  font-size: 1rem;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.note-actions button:hover {
+  opacity: 1;
+}
+
+.note-text {
+  white-space: pre-wrap;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.add-note-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 15px;
+  border-top: 1px dashed var(--border-color);
+}
+
+.add-note-box textarea {
   width: 100%;
-  min-height: 100px;
-  padding: 12px;
+  min-height: 60px;
+  padding: 10px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   font-family: var(--font-main);
-  font-size: 0.95rem;
   resize: vertical;
 }
 

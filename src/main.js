@@ -81,15 +81,21 @@ function setupEventListeners() {
   document.getElementById('btn-upload-horario').addEventListener('click', uploadHorario);
   document.getElementById('foto-horario').addEventListener('change', handleFotoChange);
 
-  // Notas Semanales (Autoguardado)
-  let noteTimeout;
-  document.getElementById('week-notes').addEventListener('input', (e) => {
-    if (!currentWeekId) return;
-    clearTimeout(noteTimeout);
-    noteTimeout = setTimeout(async () => {
-      const refPath = dbRef(db, `semanas/${currentWeekId}/notas`);
-      await set(refPath, e.target.value || null);
-    }, 800);
+  // Añadir nota
+  document.getElementById('btn-add-note').addEventListener('click', async () => {
+    const textEl = document.getElementById('new-note-text');
+    const text = textEl.value.trim();
+    if (!text || !currentWeekId || !currentUser) return;
+
+    const notesRef = dbRef(db, `semanas/${currentWeekId}/notas`);
+    const newNoteRef = push(notesRef);
+    await set(newNoteRef, {
+      text,
+      author: currentUser,
+      timestamp: Date.now()
+    });
+    
+    textEl.value = '';
   });
 }
 
@@ -163,6 +169,11 @@ function renderMonth() {
     el.innerHTML = `<span class="date-num">${i}</span><div class="turn-dots"></div>`;
     el.addEventListener('click', () => openWeek(weekId, d));
     
+    const todayStr = getISODateStr(new Date());
+    if (dateStr === todayStr) {
+      el.classList.add('today');
+    }
+
     if (dbData.semanas[weekId]?.dias?.[dateStr]) {
       const dayData = dbData.semanas[weekId].dias[dateStr];
       let dotsHtml = '';
@@ -224,17 +235,30 @@ function renderWeek(weekId) {
   tbody.innerHTML = '';
 
   // Actualizar números de los días en la cabecera
+  const todayStr = getISODateStr(new Date());
   currentWeekDates.forEach((dateStr, idx) => {
     const d = new Date(dateStr);
-    document.getElementById(`th-${idx}`).textContent = d.getDate();
+    const thEl = document.getElementById(`th-${idx}`);
+    thEl.textContent = d.getDate();
+    
+    if (dateStr === todayStr) {
+      thEl.parentElement.style.color = 'var(--color-ivan)';
+      thEl.parentElement.style.fontWeight = 'bold';
+      thEl.style.background = 'var(--color-ivan)';
+      thEl.style.color = 'white';
+      thEl.style.padding = '2px 6px';
+      thEl.style.borderRadius = '10px';
+    } else {
+      thEl.parentElement.style.color = '';
+      thEl.parentElement.style.fontWeight = '';
+      thEl.style.background = '';
+      thEl.style.color = '';
+      thEl.style.padding = '';
+    }
   });
 
-  // Cargar notas (evitar sobreescribir si el usuario está escribiendo)
-  const notesEl = document.getElementById('week-notes');
-  const notas = dbData.semanas[weekId]?.notas || '';
-  if (document.activeElement !== notesEl) {
-    notesEl.value = notas;
-  }
+  // Renderizar notas de la semana
+  renderNotes(weekId);
 
   const turnosLV = [
     { id: 'llevar', name: '🚗 Llevar' },
@@ -296,6 +320,79 @@ function renderWeek(weekId) {
 
   calcularRecuentoSemanal(weekId);
 }
+
+// ----------------------
+// 4.5 NOTAS SEMANALES
+// ----------------------
+function renderNotes(weekId) {
+  const container = document.getElementById('notes-list');
+  container.innerHTML = '';
+  
+  const notas = dbData.semanas[weekId]?.notas || {};
+  const entries = Object.entries(notas).sort((a,b) => a[1].timestamp - b[1].timestamp);
+
+  if (entries.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-secondary);font-size:0.9rem;">No hay notas esta semana.</p>';
+    return;
+  }
+
+  entries.forEach(([noteId, noteData]) => {
+    const isOwner = noteData.author === currentUser;
+    
+    const card = document.createElement('div');
+    card.className = `note-card ${noteData.author}`;
+    
+    // Convertir timestamp a formato legible (DD/MM HH:MM)
+    const dateObj = new Date(noteData.timestamp || Date.now());
+    const timeStr = `${String(dateObj.getDate()).padStart(2,'0')}/${String(dateObj.getMonth()+1).padStart(2,'0')} ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
+
+    card.innerHTML = `
+      <div class="note-header">
+        <span class="note-author">
+          ${USERS[noteData.author]?.name || noteData.author}
+          <span class="note-time">${timeStr}</span>
+        </span>
+        ${isOwner ? `
+        <span class="note-actions">
+          <button onclick="window.editNote('${noteId}', \`${noteData.text.replace(/`/g, '\\`')}\`)">✏️</button>
+          <button onclick="window.deleteNote('${noteId}')">🗑️</button>
+        </span>
+        ` : ''}
+      </div>
+      <div class="note-text" id="note-text-${noteId}">${noteData.text}</div>
+    `;
+    
+    container.appendChild(card);
+  });
+}
+
+window.deleteNote = async (noteId) => {
+  if (!currentWeekId) return;
+  if (!confirm('¿Seguro que quieres borrar esta nota?')) return;
+  const refPath = dbRef(db, `semanas/${currentWeekId}/notas/${noteId}`);
+  await set(refPath, null);
+};
+
+window.editNote = async (noteId, oldText) => {
+  if (!currentWeekId) return;
+  const container = document.getElementById(`note-text-${noteId}`);
+  container.innerHTML = `
+    <textarea id="edit-note-${noteId}" style="width:100%; min-height:60px; margin-bottom:5px;">${oldText}</textarea>
+    <button class="btn btn-small" onclick="window.saveNoteEdit('${noteId}')">Guardar</button>
+    <button class="btn btn-small" onclick="renderWeek(currentWeekId)">Cancelar</button>
+  `;
+};
+
+window.saveNoteEdit = async (noteId) => {
+  if (!currentWeekId) return;
+  const newText = document.getElementById(`edit-note-${noteId}`).value.trim();
+  if (!newText) {
+    window.deleteNote(noteId);
+    return;
+  }
+  const refPath = dbRef(db, `semanas/${currentWeekId}/notas/${noteId}/text`);
+  await set(refPath, newText);
+};
 
 // ----------------------
 // 5. RECUENTO SEMANAL
