@@ -151,12 +151,25 @@ function renderMonth() {
     if (dbData.semanas[weekId]?.dias?.[dateStr]) {
       const dayData = dbData.semanas[weekId].dias[dateStr];
       let dotsHtml = '';
+      let turnosAsignados = 0;
+      
       ['llevar', 'recoger', 'tarde', 'dormir', 'dia'].forEach(turno => {
         if (dayData[turno]) {
           dotsHtml += `<div class="dot ${dayData[turno]}"></div>`;
+          turnosAsignados++;
         }
       });
       el.querySelector('.turn-dots').innerHTML = dotsHtml;
+
+      // Calcular si está completo
+      const isWeekend = (d.getDay() === 0 || d.getDay() === 6);
+      const turnosNecesarios = isWeekend ? 2 : 4; // Finde (dia, dormir) vs L-V (llevar, recoger, tarde, dormir)
+      
+      if (turnosAsignados > 0 && turnosAsignados < turnosNecesarios) {
+        el.classList.add('day-partial');
+      } else if (turnosAsignados >= turnosNecesarios) {
+        el.classList.add('day-complete');
+      }
     }
     grid.appendChild(el);
   }

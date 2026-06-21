@@ -227,7 +227,21 @@ header {
   box-shadow: var(--shadow);
 }
 
+.cal-day.day-partial {
+  background-color: #fef3c7; /* Amarillo suave */
+  border-color: #fcd34d;
+}
+
+.cal-day.day-complete {
+  background-color: #d1fae5; /* Verde suave */
+  border-color: #6ee7b7;
+}
+
 .cal-day.empty {
+  background: transparent;
+  border: none;
+  cursor: default;
+}
   background: transparent;
   border: none;
   cursor: default;
