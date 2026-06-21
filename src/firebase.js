@@ -5,6 +5,7 @@ import { getStorage } from "firebase/storage";
 const firebaseConfig = {
   apiKey: "AIzaSyC0r6nti52BvQNNauwnhQt22ypGAOUm8QM",
   authDomain: "nicoplan-app.firebaseapp.com",
+  databaseURL: "https://nicoplan-app-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "nicoplan-app",
   storageBucket: "nicoplan-app.firebasestorage.app",
   messagingSenderId: "670902992248",
