@@ -230,6 +230,7 @@ function renderWeek(weekId) {
         <option value="">--</option>
         <option value="ivan" ${val === 'ivan' ? 'selected' : ''}>Ivan</option>
         <option value="iria" ${val === 'iria' ? 'selected' : ''}>Iria</option>
+        <option value="dudas" ${val === 'dudas' ? 'selected' : ''}>❓ Dudas</option>
       </select>
     </td>`;
   };
@@ -274,6 +275,8 @@ function renderWeek(weekId) {
 function calcularRecuentoSemanal(weekId) {
   let ivan = 0;
   let iria = 0;
+  let dudas = 0;
+  let dudas = 0;
 
   currentWeekDates.forEach(dateStr => {
     const d = dbData.semanas[weekId]?.dias?.[dateStr];
@@ -281,6 +284,7 @@ function calcularRecuentoSemanal(weekId) {
     ['llevar', 'recoger', 'tarde', 'dormir', 'dia'].forEach(t => {
       if (d[t] === 'ivan') ivan++;
       if (d[t] === 'iria') iria++;
+      if (d[t] === 'dudas') dudas++;
     });
   });
 
@@ -296,9 +300,11 @@ function calcularRecuentoSemanal(weekId) {
     </div>
     
     <p><strong>Iria:</strong> ${iria} turnos (${pctIria}%)</p>
-    <div style="background:#e2e8f0; height:10px; border-radius:5px; margin:5px 0;">
+    <div style="background:#e2e8f0; height:10px; border-radius:5px; margin:5px 0 15px 0;">
       <div style="background:var(--color-iria); width:${pctIria}%; height:100%; border-radius:5px;"></div>
     </div>
+
+    ${dudas > 0 ? `<p style="color:#6b7280; font-size:0.9rem; margin-top:10px;">⚠️ Hay <strong>${dudas}</strong> turno(s) marcado(s) como duda.</p>` : ''}
   `;
 
   document.getElementById('weekly-summary').innerHTML = html;
