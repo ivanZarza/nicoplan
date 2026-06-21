@@ -82,10 +82,14 @@ function setupEventListeners() {
   document.getElementById('foto-horario').addEventListener('change', handleFotoChange);
 
   // Notas Semanales (Autoguardado)
-  document.getElementById('week-notes').addEventListener('change', async (e) => {
+  let noteTimeout;
+  document.getElementById('week-notes').addEventListener('input', (e) => {
     if (!currentWeekId) return;
-    const refPath = dbRef(db, `semanas/${currentWeekId}/notas`);
-    await set(refPath, e.target.value || null);
+    clearTimeout(noteTimeout);
+    noteTimeout = setTimeout(async () => {
+      const refPath = dbRef(db, `semanas/${currentWeekId}/notas`);
+      await set(refPath, e.target.value || null);
+    }, 800);
   });
 }
 
@@ -122,6 +126,10 @@ function getISOWeek(date) {
   return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
 }
 
+function getISODateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function renderMonth() {
   const display = document.getElementById('current-month-display');
   const date = new Date(currentYear, currentMonth, 1);
@@ -147,7 +155,7 @@ function renderMonth() {
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   for (let i = 1; i <= daysInMonth; i++) {
     const d = new Date(currentYear, currentMonth, i);
-    const dateStr = d.toLocaleDateString('sv-SE'); // YYYY-MM-DD
+    const dateStr = getISODateStr(d);
     const weekId = `${currentYear}-W${getISOWeek(d)}`;
 
     const el = document.createElement('div');
@@ -199,7 +207,7 @@ function openWeek(weekId, dateObj) {
   currentWeekDates = Array.from({length: 7}, (_, i) => {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
-    return d.toLocaleDateString('sv-SE');
+    return getISODateStr(d);
   });
 
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -221,9 +229,12 @@ function renderWeek(weekId) {
     document.getElementById(`th-${idx}`).textContent = d.getDate();
   });
 
-  // Cargar notas
+  // Cargar notas (evitar sobreescribir si el usuario está escribiendo)
+  const notesEl = document.getElementById('week-notes');
   const notas = dbData.semanas[weekId]?.notas || '';
-  document.getElementById('week-notes').value = notas;
+  if (document.activeElement !== notesEl) {
+    notesEl.value = notas;
+  }
 
   const turnosLV = [
     { id: 'llevar', name: '🚗 Llevar' },

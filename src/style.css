@@ -228,13 +228,13 @@ header {
 }
 
 .cal-day.day-partial {
-  background-color: #fef3c7; /* Amarillo suave */
-  border-color: #fcd34d;
+  background-color: #fef3c7 !important; /* Amarillo suave */
+  border-color: #fcd34d !important;
 }
 
 .cal-day.day-complete {
-  background-color: #d1fae5; /* Verde suave */
-  border-color: #6ee7b7;
+  background-color: #d1fae5 !important; /* Verde suave */
+  border-color: #6ee7b7 !important;
 }
 
 .cal-day.empty {
