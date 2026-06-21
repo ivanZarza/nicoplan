@@ -293,7 +293,6 @@ function calcularRecuentoSemanal(weekId) {
   let ivan = 0;
   let iria = 0;
   let dudas = 0;
-  let dudas = 0;
 
   currentWeekDates.forEach(dateStr => {
     const d = dbData.semanas[weekId]?.dias?.[dateStr];
