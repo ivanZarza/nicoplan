@@ -1,0 +1,372 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+:root {
+  /* Colors */
+  --bg-color: #f8fafc;
+  --surface-color: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+  
+  /* User Colors */
+  --color-ivan: #3b82f6; /* Blue */
+  --color-ivan-light: #eff6ff;
+  --color-iria: #f97316; /* Orange */
+  --color-iria-light: #fff7ed;
+  --color-unassigned: #cbd5e1;
+  
+  /* Spacing & Misc */
+  --radius: 12px;
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --font-main: 'Outfit', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* -------------------
+   LOGIN VIEW
+------------------- */
+#login-view {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.login-card {
+  background: var(--surface-color);
+  padding: 40px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+}
+
+.login-card h1 {
+  margin-bottom: 10px;
+  color: var(--text-primary);
+}
+
+.login-card p {
+  color: var(--text-secondary);
+  margin-bottom: 30px;
+}
+
+.login-buttons {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+/* -------------------
+   BUTTONS & INPUTS
+------------------- */
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+  font-family: var(--font-main);
+}
+
+.btn-primary {
+  background-color: var(--color-ivan);
+  color: white;
+}
+
+.btn-secondary {
+  background-color: var(--color-iria);
+  color: white;
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  border: 1px solid var(--border-color);
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+input[type="password"],
+input[type="time"],
+input[type="date"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 1rem;
+  margin-bottom: 15px;
+  text-align: center;
+  letter-spacing: 2px;
+}
+
+/* -------------------
+   MAIN APP LAYOUT
+------------------- */
+#main-app {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-weight: 600;
+}
+
+/* TABS */
+.tabs {
+  display: flex;
+  background: var(--surface-color);
+  padding: 5px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  margin-bottom: 30px;
+}
+
+.tab {
+  flex: 1;
+  padding: 12px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab.active {
+  background: var(--bg-color);
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* -------------------
+   CALENDAR (MONTH)
+------------------- */
+.month-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.month-controls button {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+
+.cal-header {
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding-bottom: 10px;
+}
+
+.cal-day {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 10px;
+  min-height: 100px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.cal-day:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.cal-day.empty {
+  background: transparent;
+  border: none;
+  cursor: default;
+}
+
+.cal-day .date-num {
+  font-weight: 600;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.turn-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-unassigned);
+}
+.dot.ivan { background: var(--color-ivan); }
+.dot.iria { background: var(--color-iria); }
+
+/* -------------------
+   WEEKLY VIEW
+------------------- */
+.table-container {
+  overflow-x: auto;
+  background: var(--surface-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 15px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+}
+
+th {
+  background: var(--bg-color);
+  font-weight: 600;
+}
+
+td:first-child {
+  font-weight: 600;
+  text-align: left;
+  background: var(--bg-color);
+}
+
+.turn-selector {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  font-family: var(--font-main);
+  font-weight: 600;
+  cursor: pointer;
+  appearance: none;
+  text-align: center;
+}
+
+.turn-selector.ivan {
+  background-color: var(--color-ivan-light);
+  color: var(--color-ivan);
+  border-color: var(--color-ivan);
+}
+
+.turn-selector.iria {
+  background-color: var(--color-iria-light);
+  color: var(--color-iria);
+  border-color: var(--color-iria);
+}
+
+/* -------------------
+   SUMMARY & HORARIOS
+------------------- */
+.weekly-summary, .upload-section {
+  background: var(--surface-color);
+  padding: 20px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.upload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 500px;
+  margin-bottom: 20px;
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.horario-card {
+  background: var(--surface-color);
+  padding: 15px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.horario-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-top: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.h-date {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.h-times {
+  color: var(--color-ivan);
+  font-weight: 600;
+  margin: 5px 0;
+}
+
+.h-user {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 10px;
+}
