@@ -1,6 +1,7 @@
 import { db, storage } from './firebase.js';
 import { ref as dbRef, onValue, set, push } from 'firebase/database';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import Tesseract from 'tesseract.js';
 
 // ----------------------
 // 1. STATE & AUTH
@@ -76,8 +77,9 @@ function setupEventListeners() {
   document.getElementById('prev-month').addEventListener('click', () => changeMonth(-1));
   document.getElementById('next-month').addEventListener('click', () => changeMonth(1));
 
-  // Upload horario
+  // Upload horario & OCR
   document.getElementById('btn-upload-horario').addEventListener('click', uploadHorario);
+  document.getElementById('foto-horario').addEventListener('change', handleFotoChange);
 }
 
 function showPin(userId) {
@@ -290,8 +292,48 @@ function calcularRecuentoSemanal(weekId) {
 }
 
 // ----------------------
-// 6. HORARIOS & AUTO-ASSIGN
+// 6. HORARIOS, OCR & AUTO-ASSIGN
 // ----------------------
+
+async function handleFotoChange(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const status = document.getElementById('ocr-status');
+  const inputEntrada = document.getElementById('hora-entrada');
+  const inputSalida = document.getElementById('hora-salida');
+
+  status.classList.remove('hidden');
+  status.textContent = 'Analizando imagen... 🤖';
+
+  try {
+    const worker = await Tesseract.createWorker('spa');
+    const ret = await worker.recognize(file);
+    const text = ret.data.text;
+    await worker.terminate();
+
+    // Regex para buscar horas (ej. 05:00, 14:00, 5:00)
+    const timeRegex = /\b([01]?\d|2[0-3])[:.]([0-5]\d)\b/g;
+    const matches = [...text.matchAll(timeRegex)];
+    
+    if (matches.length >= 2) {
+      // Formatear para que siempre sea HH:mm
+      const formatTime = (h, m) => `${h.padStart(2, '0')}:${m}`;
+      inputEntrada.value = formatTime(matches[0][1], matches[0][2]);
+      inputSalida.value = formatTime(matches[matches.length - 1][1], matches[matches.length - 1][2]); // Asumimos la última como salida
+      status.textContent = '¡Horas detectadas! Por favor, comprueba que sean correctas. ✅';
+      status.style.color = '#10b981'; // Green
+    } else {
+      status.textContent = 'No se encontraron horas claras. Introdúcelas manualmente. ⚠️';
+      status.style.color = '#f59e0b'; // Yellow/Orange
+    }
+  } catch (err) {
+    console.error(err);
+    status.textContent = 'Error al analizar la imagen. ❌';
+    status.style.color = '#ef4444'; // Red
+  }
+}
+
 async function uploadHorario() {
   const fileInput = document.getElementById('foto-horario');
   const fecha = document.getElementById('fecha-horario').value;
