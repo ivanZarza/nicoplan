@@ -3,34 +3,89 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NicoPlan 🏖️</title>
+    <title>NicoPlan</title>
     <link rel="stylesheet" href="/src/style.css">
   </head>
   <body>
-    <!-- CONTENEDOR PRINCIPAL -->
     <div id="app">
-      
-      <!-- PANTALLA DE LOGIN -->
-      <section id="login-view" class="view active">
+
+      <!-- LOADING -->
+      <section id="loading-view" class="view active">
         <div class="login-card">
-          <h1>NicoPlan 🏖️</h1>
-          <p>Organización de turnos de verano</p>
-          <div class="login-buttons">
-            <button id="btn-login-ivan" class="btn btn-primary">Soy Ivan</button>
-            <button id="btn-login-iria" class="btn btn-secondary">Soy Iria</button>
-          </div>
-          <div id="pin-container" class="hidden">
-            <p>Introduce tu PIN:</p>
-            <input type="password" id="pin-input" maxlength="4" placeholder="••••">
-            <button id="btn-login-submit" class="btn">Entrar</button>
-          </div>
+          <h1>NicoPlan</h1>
+          <p>Cargando...</p>
         </div>
       </section>
 
-      <!-- APLICACIÓN PRINCIPAL (OCULTA HASTA LOGIN) -->
-      <section id="main-app" class="hidden">
+      <!-- AUTH: LOGIN / REGISTRO -->
+      <section id="auth-view" class="view">
+        <div class="login-card">
+          <h1>NicoPlan</h1>
+          <p>Organiza los turnos de custodia</p>
+
+          <div id="auth-login-form">
+            <input type="email" id="auth-email" placeholder="Email">
+            <input type="password" id="auth-password" placeholder="Contrasena">
+            <button id="btn-auth-login" class="btn btn-primary">Entrar</button>
+            <div class="auth-divider"><span>o</span></div>
+            <button id="btn-auth-google" class="btn btn-google">Entrar con Google</button>
+            <p class="auth-switch">No tienes cuenta? <a href="#" id="link-to-register">Registrate</a></p>
+          </div>
+
+          <div id="auth-register-form" class="hidden">
+            <input type="text" id="reg-name" placeholder="Tu nombre">
+            <input type="email" id="reg-email" placeholder="Email">
+            <input type="password" id="reg-password" placeholder="Contrasena (min 6 caracteres)">
+            <button id="btn-auth-register" class="btn btn-primary">Crear cuenta</button>
+            <div class="auth-divider"><span>o</span></div>
+            <button id="btn-auth-google-reg" class="btn btn-google">Registrarse con Google</button>
+            <p class="auth-switch">Ya tienes cuenta? <a href="#" id="link-to-login">Inicia sesion</a></p>
+          </div>
+
+          <p id="auth-error" class="error-msg hidden"></p>
+        </div>
+      </section>
+
+      <!-- ONBOARDING: CREAR O UNIRSE A GRUPO -->
+      <section id="onboarding-view" class="view">
+        <div class="login-card">
+          <h1>Bienvenido/a!</h1>
+          <p id="onboarding-greeting"></p>
+
+          <div class="onboarding-options">
+            <button id="btn-create-group" class="btn btn-primary">Crear grupo nuevo</button>
+            <button id="btn-join-group" class="btn btn-secondary">Unirme a un grupo</button>
+          </div>
+
+          <div id="create-group-form" class="hidden">
+            <h3>Crear grupo</h3>
+            <input type="text" id="group-name" placeholder="Nombre del grupo (ej: Plan Verano)">
+            <div class="color-pick">
+              <label>Tu color:</label>
+              <div class="color-options" id="create-color-options"></div>
+            </div>
+            <button id="btn-confirm-create" class="btn btn-primary">Crear</button>
+          </div>
+
+          <div id="join-group-form" class="hidden">
+            <h3>Unirse a grupo</h3>
+            <input type="text" id="join-code" placeholder="Codigo de invitacion" maxlength="6" style="text-transform:uppercase; letter-spacing:4px;">
+            <div class="color-pick">
+              <label>Tu color:</label>
+              <div class="color-options" id="join-color-options"></div>
+            </div>
+            <button id="btn-confirm-join" class="btn btn-secondary">Unirme</button>
+          </div>
+
+          <p id="onboarding-error" class="error-msg hidden"></p>
+          <button id="btn-auth-logout-onboarding" class="btn-small" style="margin-top:20px;">Cerrar sesion</button>
+        </div>
+      </section>
+
+      <!-- APP PRINCIPAL -->
+      <section id="main-app" class="view">
         <header>
-          <div class="logo">NicoPlan 🏖️</div>
+          <div class="logo">NicoPlan</div>
           <div class="user-info">
             <span id="logged-user-name"></span>
             <button id="btn-logout" class="btn-small">Salir</button>
@@ -41,90 +96,159 @@
           <button class="tab active" data-target="monthly-view">Mes</button>
           <button class="tab" data-target="weekly-view">Semana</button>
           <button class="tab" data-target="horarios-view">Horarios</button>
+          <button class="tab" data-target="settings-view">Ajustes</button>
         </nav>
 
         <main>
           <!-- Vista Mensual -->
           <div id="monthly-view" class="tab-content active">
             <div class="month-controls">
-              <button id="prev-month">◀</button>
-              <h2 id="current-month-display">Julio 2026</h2>
-              <button id="next-month">▶</button>
+              <button id="prev-month">&#9664;</button>
+              <h2 id="current-month-display"></h2>
+              <button id="next-month">&#9654;</button>
             </div>
-            <div class="calendar-grid" id="calendar-grid">
-              <!-- Días del mes se renderizan aquí -->
-            </div>
-
-            <div class="calendar-legend">
-              <div class="legend-group">
-                <span class="legend-item"><div class="dot ivan"></div> Iván</span>
-                <span class="legend-item"><div class="dot iria"></div> Iria</span>
-                <span class="legend-item"><div class="dot dudas"></div> Dudas</span>
-              </div>
-              <div class="legend-group">
-                <span class="legend-item"><div class="legend-box partial"></div> A medias</span>
-                <span class="legend-item"><div class="legend-box complete"></div> Completo</span>
-              </div>
-            </div>
+            <div class="calendar-grid" id="calendar-grid"></div>
+            <div class="calendar-legend" id="calendar-legend"></div>
           </div>
 
           <!-- Vista Semanal -->
           <div id="weekly-view" class="tab-content hidden">
-            <h2 id="current-week-display">Semana 28 (6-12 Jul)</h2>
+            <h2 id="current-week-display"></h2>
             <div class="table-container">
               <table>
                 <thead>
                   <tr>
                     <th>Turno</th>
-                    <th>L</br><small id="th-0"></small></th>
-                    <th>M</br><small id="th-1"></small></th>
-                    <th>X</br><small id="th-2"></small></th>
-                    <th>J</br><small id="th-3"></small></th>
-                    <th>V</br><small id="th-4"></small></th>
-                    <th>S</br><small id="th-5"></small></th>
-                    <th>D</br><small id="th-6"></small></th>
+                    <th>L<br><small id="th-0"></small></th>
+                    <th>M<br><small id="th-1"></small></th>
+                    <th>X<br><small id="th-2"></small></th>
+                    <th>J<br><small id="th-3"></small></th>
+                    <th>V<br><small id="th-4"></small></th>
+                    <th>S<br><small id="th-5"></small></th>
+                    <th>D<br><small id="th-6"></small></th>
                   </tr>
                 </thead>
-                <tbody id="weekly-tbody">
-                  <!-- JS rows -->
-                </tbody>
+                <tbody id="weekly-tbody"></tbody>
               </table>
             </div>
 
             <div class="weekly-notes-container">
-              <h3>📝 Notas y Recordatorios</h3>
-              <div id="notes-list" class="notes-list">
-                <!-- Notas JS -->
-              </div>
+              <h3>Notas y Recordatorios</h3>
+              <div id="notes-list" class="notes-list"></div>
               <div class="add-note-box">
-                <textarea id="new-note-text" placeholder="Escribe un apunte, excursión..."></textarea>
-                <button id="btn-add-note" class="btn btn-primary">Añadir Nota</button>
+                <textarea id="new-note-text" placeholder="Escribe un apunte, excursion..."></textarea>
+                <button id="btn-add-note" class="btn btn-primary">Anadir Nota</button>
               </div>
             </div>
 
-            <div class="weekly-summary" id="weekly-summary">
-              <!-- JS summary -->
-            </div>
+            <div class="weekly-summary" id="weekly-summary"></div>
           </div>
 
           <!-- Vista de Horarios -->
           <div id="horarios-view" class="tab-content hidden">
-            <h2>Horarios Laborales de Iria</h2>
+            <h2 id="horarios-title">Horarios Laborales</h2>
             <div class="upload-section">
               <input type="file" id="foto-horario" accept="image/*">
-              <div id="ocr-status" class="hidden" style="color:var(--color-ivan); font-weight:bold; font-size:0.9rem; text-align:center;">Analizando imagen... 🤖</div>
+              <div id="ocr-status" class="hidden" style="font-weight:bold; font-size:0.9rem; text-align:center;"></div>
               <input type="date" id="fecha-horario">
               <input type="time" id="hora-entrada">
               <input type="time" id="hora-salida">
               <button id="btn-upload-horario" class="btn btn-primary">Subir Horario</button>
             </div>
-            <div class="gallery" id="horarios-gallery">
-              <!-- Horarios subidos -->
+            <div class="gallery" id="horarios-gallery"></div>
+          </div>
+
+          <!-- Vista de Ajustes -->
+          <div id="settings-view" class="tab-content hidden">
+            <h2>Ajustes del grupo</h2>
+
+            <div class="settings-section">
+              <h3>Grupo</h3>
+              <div class="setting-row">
+                <label>Nombre del grupo:</label>
+                <input type="text" id="setting-group-name" placeholder="Nombre">
+              </div>
+              <div class="setting-row">
+                <label>Codigo de invitacion:</label>
+                <div class="invite-code-box">
+                  <span id="setting-invite-code" class="invite-code"></span>
+                  <button id="btn-copy-code" class="btn-small">Copiar</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h3>Miembros</h3>
+              <div id="members-list" class="members-list"></div>
+            </div>
+
+            <div class="settings-section">
+              <h3>Auto-asignacion de turnos</h3>
+              <p class="setting-hint">Configura las reglas para asignar turnos automaticamente cuando se sube un horario laboral.</p>
+
+              <div class="setting-row">
+                <label>Activar auto-asignacion:</label>
+                <input type="checkbox" id="setting-auto-enabled">
+              </div>
+
+              <div id="auto-assign-settings">
+                <div class="setting-row">
+                  <label>Quien sube el horario laboral?</label>
+                  <select id="setting-horario-member"></select>
+                </div>
+                <div class="setting-row">
+                  <label>Hora limite de entrada (temprana):</label>
+                  <input type="time" id="setting-entrada-limite" value="09:00">
+                </div>
+                <div class="setting-row">
+                  <label>Hora limite de salida (tarde):</label>
+                  <input type="time" id="setting-salida-limite" value="14:00">
+                </div>
+
+                <div class="rules-box">
+                  <h4>Si entra ANTES del limite:</h4>
+                  <div class="setting-row">
+                    <label>Llevar:</label>
+                    <select id="rule-entrada-temprana-llevar"></select>
+                  </div>
+                  <h4>Si entra DESPUES del limite:</h4>
+                  <div class="setting-row">
+                    <label>Llevar:</label>
+                    <select id="rule-entrada-normal-llevar"></select>
+                  </div>
+                  <h4>Si sale DESPUES del limite:</h4>
+                  <div class="setting-row">
+                    <label>Recoger:</label>
+                    <select id="rule-salida-tarde-recoger"></select>
+                  </div>
+                  <div class="setting-row">
+                    <label>Tarde:</label>
+                    <select id="rule-salida-tarde-tarde"></select>
+                  </div>
+                  <div class="setting-row">
+                    <label>Dormir:</label>
+                    <select id="rule-salida-tarde-dormir"></select>
+                  </div>
+                  <h4>Si sale ANTES del limite:</h4>
+                  <div class="setting-row">
+                    <label>Recoger:</label>
+                    <select id="rule-salida-normal-recoger"></select>
+                  </div>
+                </div>
+              </div>
+
+              <button id="btn-save-settings" class="btn btn-primary" style="margin-top:15px;">Guardar ajustes</button>
+              <p id="settings-msg" class="hidden" style="margin-top:10px; text-align:center;"></p>
+            </div>
+
+            <div class="settings-section danger-zone">
+              <h3>Zona peligrosa</h3>
+              <button id="btn-leave-group" class="btn btn-danger">Abandonar grupo</button>
             </div>
           </div>
         </main>
       </section>
-      
+
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

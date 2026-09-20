@@ -1,24 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
 
 :root {
-  /* Colors */
   --bg-color: #f8fafc;
   --surface-color: #ffffff;
   --text-primary: #0f172a;
   --text-secondary: #64748b;
   --border-color: #e2e8f0;
-  
-  /* User Colors */
-  --color-ivan: #3b82f6; /* Blue */
-  --color-ivan-light: #eff6ff;
-  --color-iria: #f97316; /* Orange */
-  --color-iria-light: #fff7ed;
   --color-unassigned: #cbd5e1;
-  
-  /* Spacing & Misc */
   --radius: 12px;
   --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --font-main: 'Outfit', sans-serif;
+
+  /* Dynamic member colors — set via JS */
+  --color-m0: #3b82f6;
+  --color-m0-light: #eff6ff;
+  --color-m1: #f97316;
+  --color-m1-light: #fff7ed;
 }
 
 * {
@@ -34,16 +31,26 @@ body {
   line-height: 1.5;
 }
 
+.view {
+  display: none !important;
+}
+
+.view.active {
+  display: block !important;
+}
+
 .hidden {
   display: none !important;
 }
 
 /* -------------------
-   LOGIN VIEW
+   AUTH & LOADING
 ------------------- */
-#login-view {
+#loading-view.active,
+#auth-view.active,
+#onboarding-view.active {
+  display: flex !important;
   min-height: 100vh;
-  display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
@@ -55,7 +62,7 @@ body {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   text-align: center;
-  max-width: 400px;
+  max-width: 420px;
   width: 100%;
 }
 
@@ -66,17 +73,64 @@ body {
 
 .login-card p {
   color: var(--text-secondary);
-  margin-bottom: 30px;
-}
-
-.login-buttons {
-  display: flex;
-  gap: 15px;
   margin-bottom: 20px;
 }
 
+.login-card input[type="email"],
+.login-card input[type="password"],
+.login-card input[type="text"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 1rem;
+  margin-bottom: 12px;
+  font-family: var(--font-main);
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 15px 0;
+  color: var(--text-secondary);
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.auth-divider span {
+  padding: 0 15px;
+  font-size: 0.9rem;
+}
+
+.auth-switch {
+  margin-top: 15px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.auth-switch a {
+  color: var(--color-m0);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.error-msg {
+  color: #ef4444;
+  font-size: 0.9rem;
+  margin-top: 15px;
+  padding: 10px;
+  background: #fef2f2;
+  border-radius: 8px;
+}
+
 /* -------------------
-   BUTTONS & INPUTS
+   BUTTONS
 ------------------- */
 .btn {
   padding: 12px 24px;
@@ -85,17 +139,41 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  flex: 1;
+  width: 100%;
   font-family: var(--font-main);
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .btn-primary {
-  background-color: var(--color-ivan);
+  background-color: var(--color-m0);
   color: white;
 }
 
 .btn-secondary {
-  background-color: var(--color-iria);
+  background-color: var(--color-m1);
+  color: white;
+}
+
+.btn-google {
+  background: white;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-danger {
+  background: #ef4444;
   color: white;
 }
 
@@ -106,9 +184,9 @@ body {
   background: white;
   border-radius: 6px;
   cursor: pointer;
+  font-family: var(--font-main);
 }
 
-input[type="password"],
 input[type="time"],
 input[type="date"] {
   width: 100%;
@@ -116,14 +194,63 @@ input[type="date"] {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 1rem;
-  margin-bottom: 15px;
-  text-align: center;
-  letter-spacing: 2px;
+  margin-bottom: 12px;
+  font-family: var(--font-main);
+}
+
+/* -------------------
+   ONBOARDING
+------------------- */
+.onboarding-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.color-pick {
+  margin: 15px 0;
+  text-align: left;
+}
+
+.color-pick label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+}
+
+.color-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.color-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.color-btn:hover {
+  transform: scale(1.15);
+}
+
+.color-btn.selected {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--text-primary);
 }
 
 /* -------------------
    MAIN APP LAYOUT
 ------------------- */
+#main-app.active {
+  display: block;
+}
+
 #main-app {
   max-width: 1000px;
   margin: 0 auto;
@@ -161,7 +288,7 @@ header {
 
 .tab {
   flex: 1;
-  padding: 12px;
+  padding: 12px 6px;
   background: none;
   border: none;
   border-radius: 8px;
@@ -169,6 +296,8 @@ header {
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
+  font-family: var(--font-main);
+  font-size: 0.9rem;
 }
 
 .tab.active {
@@ -197,12 +326,13 @@ header {
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 1rem;
 }
 
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 10px;
+  gap: 8px;
 }
 
 .cal-header {
@@ -216,8 +346,8 @@ header {
   background: var(--surface-color);
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  padding: 10px;
-  min-height: 100px;
+  padding: 8px;
+  min-height: 70px;
   cursor: pointer;
   transition: transform 0.1s;
 }
@@ -228,12 +358,12 @@ header {
 }
 
 .cal-day.day-partial {
-  background-color: #fef3c7 !important; /* Amarillo suave */
+  background-color: #fef3c7 !important;
   border-color: #fcd34d !important;
 }
 
 .cal-day.day-complete {
-  background-color: #d1fae5 !important; /* Verde suave */
+  background-color: #d1fae5 !important;
   border-color: #6ee7b7 !important;
 }
 
@@ -241,20 +371,22 @@ header {
   background: transparent;
   border: none;
   cursor: default;
+  min-height: 0;
 }
 
 .cal-day .date-num {
   font-weight: 600;
   margin-bottom: 5px;
   display: block;
+  font-size: 0.9rem;
 }
 
 .cal-day.today {
-  border: 2px solid var(--color-ivan) !important;
+  border: 2px solid var(--color-m0) !important;
 }
 
 .cal-day.today .date-num {
-  background: var(--color-ivan);
+  background: var(--color-m0);
   color: white;
   padding: 2px 6px;
   border-radius: 10px;
@@ -264,18 +396,15 @@ header {
 .turn-dots {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 3px;
 }
 
 .dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: var(--color-unassigned);
 }
-.dot.ivan { background: var(--color-ivan); }
-.dot.iria { background: var(--color-iria); }
-.dot.dudas { background: #9ca3af; }
 
 .calendar-legend {
   margin-top: 20px;
@@ -331,10 +460,11 @@ table {
 }
 
 th, td {
-  padding: 15px;
+  padding: 12px 8px;
   text-align: center;
   border-bottom: 1px solid var(--border-color);
   border-right: 1px solid var(--border-color);
+  font-size: 0.9rem;
 }
 
 th {
@@ -346,11 +476,12 @@ td:first-child {
   font-weight: 600;
   text-align: left;
   background: var(--bg-color);
+  white-space: nowrap;
 }
 
 .turn-selector {
   width: 100%;
-  padding: 8px;
+  padding: 6px 4px;
   border-radius: 6px;
   border: 1px solid var(--border-color);
   font-family: var(--font-main);
@@ -358,28 +489,11 @@ td:first-child {
   cursor: pointer;
   appearance: none;
   text-align: center;
-}
-
-.turn-selector.ivan {
-  background-color: var(--color-ivan-light);
-  color: var(--color-ivan);
-  border-color: var(--color-ivan);
-}
-
-.turn-selector.iria {
-  background-color: var(--color-iria-light);
-  color: var(--color-iria);
-  border-color: var(--color-iria);
-}
-
-.turn-selector.dudas {
-  background-color: #f3f4f6;
-  color: #6b7280;
-  border-color: #d1d5db;
+  font-size: 0.8rem;
 }
 
 /* -------------------
-   SUMMARY, NOTES & HORARIOS
+   NOTES
 ------------------- */
 .weekly-summary, .upload-section, .weekly-notes-container {
   background: var(--surface-color);
@@ -407,16 +521,6 @@ td:first-child {
   font-size: 0.95rem;
 }
 
-.note-card.ivan {
-  background: var(--color-ivan-light);
-  border-color: #bfdbfe;
-}
-
-.note-card.iria {
-  background: var(--color-iria-light);
-  border-color: #fed7aa;
-}
-
 .note-header {
   display: flex;
   justify-content: space-between;
@@ -430,9 +534,6 @@ td:first-child {
   align-items: center;
   gap: 5px;
 }
-
-.note-card.ivan .note-author { color: var(--color-ivan); }
-.note-card.iria .note-author { color: var(--color-iria); }
 
 .note-time {
   font-size: 0.75rem;
@@ -479,10 +580,13 @@ td:first-child {
   resize: vertical;
 }
 
+/* -------------------
+   HORARIOS
+------------------- */
 .upload-section {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 12px;
   max-width: 500px;
   margin-bottom: 20px;
 }
@@ -517,7 +621,6 @@ td:first-child {
 }
 
 .h-times {
-  color: var(--color-ivan);
   font-weight: 600;
   margin: 5px 0;
 }
@@ -526,4 +629,187 @@ td:first-child {
   font-size: 0.8rem;
   color: var(--text-secondary);
   margin-top: 10px;
+}
+
+.no-photo {
+  padding: 40px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* -------------------
+   SETTINGS
+------------------- */
+.settings-section {
+  background: var(--surface-color);
+  padding: 20px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+
+.settings-section h3 {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.setting-row label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  flex: 1;
+  min-width: 150px;
+}
+
+.setting-row input[type="text"],
+.setting-row input[type="time"],
+.setting-row select {
+  flex: 1;
+  max-width: 250px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-family: var(--font-main);
+  margin-bottom: 0;
+}
+
+.setting-row input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.setting-hint {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin-bottom: 15px;
+}
+
+.invite-code-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.invite-code {
+  font-family: monospace;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--text-primary);
+  background: var(--bg-color);
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px dashed var(--border-color);
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.member-row:last-child {
+  border-bottom: none;
+}
+
+.member-color {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.member-role {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-left: auto;
+  text-transform: capitalize;
+}
+
+.rules-box {
+  margin-top: 15px;
+  padding: 15px;
+  background: var(--bg-color);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.rules-box h4 {
+  margin: 12px 0 8px 0;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.rules-box h4:first-child {
+  margin-top: 0;
+}
+
+.danger-zone {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+}
+
+.danger-zone h3 {
+  color: #ef4444;
+}
+
+/* -------------------
+   RESPONSIVE
+------------------- */
+@media (max-width: 600px) {
+  .login-card {
+    padding: 25px 20px;
+  }
+
+  .cal-day {
+    padding: 5px;
+    min-height: 55px;
+  }
+
+  .cal-day .date-num {
+    font-size: 0.8rem;
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+  }
+
+  th, td {
+    padding: 8px 4px;
+    font-size: 0.8rem;
+  }
+
+  .turn-selector {
+    padding: 4px 2px;
+    font-size: 0.7rem;
+  }
+
+  .tab {
+    padding: 10px 4px;
+    font-size: 0.8rem;
+  }
+
+  .setting-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .setting-row input[type="text"],
+  .setting-row input[type="time"],
+  .setting-row select {
+    max-width: 100%;
+    width: 100%;
+  }
 }
