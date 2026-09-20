@@ -24,8 +24,10 @@
           <p>Organiza los turnos de custodia</p>
 
           <div id="auth-login-form">
-            <input type="email" id="auth-email" placeholder="Email">
-            <input type="password" id="auth-password" placeholder="Contrasena">
+            <label class="input-label" for="auth-email">Correo electronico</label>
+            <input type="email" id="auth-email" placeholder="tucorreo@ejemplo.com">
+            <label class="input-label" for="auth-password">Contrasena</label>
+            <input type="password" id="auth-password" placeholder="••••••">
             <button id="btn-auth-login" class="btn btn-primary">Entrar</button>
             <div class="auth-divider"><span>o</span></div>
             <button id="btn-auth-google" class="btn btn-google">Entrar con Google</button>
@@ -33,9 +35,12 @@
           </div>
 
           <div id="auth-register-form" class="hidden">
-            <input type="text" id="reg-name" placeholder="Tu nombre">
-            <input type="email" id="reg-email" placeholder="Email">
-            <input type="password" id="reg-password" placeholder="Contrasena (min 6 caracteres)">
+            <label class="input-label" for="reg-name">Tu nombre (como quieres que te vean)</label>
+            <input type="text" id="reg-name" placeholder="Ej: Maria" autocomplete="off">
+            <label class="input-label" for="reg-email">Correo electronico</label>
+            <input type="email" id="reg-email" placeholder="tucorreo@ejemplo.com">
+            <label class="input-label" for="reg-password">Contrasena (minimo 6 caracteres)</label>
+            <input type="password" id="reg-password" placeholder="••••••" autocomplete="new-password">
             <button id="btn-auth-register" class="btn btn-primary">Crear cuenta</button>
             <div class="auth-divider"><span>o</span></div>
             <button id="btn-auth-google-reg" class="btn btn-google">Registrarse con Google</button>
