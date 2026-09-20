@@ -3,7 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NicoPlan</title>
+    <meta name="theme-color" content="#3b82f6" />
+    <meta name="description" content="Organiza los turnos de custodia" />
+    <link rel="manifest" href="/nicoplan/manifest.json" />
+    <link rel="icon" href="/nicoplan/favicon.svg" />
+    <link rel="apple-touch-icon" href="/nicoplan/icons/icon-192.svg" />
+    <title>TurnosKids</title>
     <link rel="stylesheet" href="/src/style.css">
   </head>
   <body>
@@ -12,7 +17,7 @@
       <!-- LOADING -->
       <section id="loading-view" class="view active">
         <div class="login-card">
-          <h1>NicoPlan</h1>
+          <h1>TurnosKids</h1>
           <p>Cargando...</p>
         </div>
       </section>
@@ -20,7 +25,7 @@
       <!-- AUTH: LOGIN / REGISTRO -->
       <section id="auth-view" class="view">
         <div class="login-card">
-          <h1>NicoPlan</h1>
+          <h1>TurnosKids</h1>
           <p>Organiza los turnos de custodia</p>
 
           <div id="auth-login-form">
@@ -29,6 +34,7 @@
             <label class="input-label" for="auth-password">Contrasena</label>
             <input type="password" id="auth-password" placeholder="••••••">
             <button id="btn-auth-login" class="btn btn-primary">Entrar</button>
+            <p class="auth-forgot"><a href="#" id="link-forgot-password">He olvidado mi contrasena</a></p>
             <div class="auth-divider"><span>o</span></div>
             <button id="btn-auth-google" class="btn btn-google">Entrar con Google</button>
             <p class="auth-switch">No tienes cuenta? <a href="#" id="link-to-register">Registrate</a></p>
@@ -47,7 +53,15 @@
             <p class="auth-switch">Ya tienes cuenta? <a href="#" id="link-to-login">Inicia sesion</a></p>
           </div>
 
+          <div id="auth-reset-form" class="hidden">
+            <label class="input-label" for="reset-email">Correo electronico de tu cuenta</label>
+            <input type="email" id="reset-email" placeholder="tucorreo@ejemplo.com">
+            <button id="btn-send-reset" class="btn btn-primary">Enviar enlace de recuperacion</button>
+            <p class="auth-switch"><a href="#" id="link-back-to-login">Volver al login</a></p>
+          </div>
+
           <p id="auth-error" class="error-msg hidden"></p>
+          <p id="auth-success" class="success-msg hidden"></p>
         </div>
       </section>
 
@@ -66,7 +80,7 @@
             <h3>Crear grupo</h3>
             <label class="input-label" for="group-name">Nombre del grupo</label>
             <input type="text" id="group-name" placeholder="Ej: Plan Verano">
-            <label class="input-label" for="group-invite-code">Codigo de invitacion (6 caracteres, lo compartiras con tu pareja)</label>
+            <label class="input-label" for="group-invite-code">Codigo de invitacion (4-6 caracteres)</label>
             <input type="text" id="group-invite-code" maxlength="6" placeholder="Ej: NICO26" style="text-transform:uppercase; letter-spacing:4px; text-align:center;">
             <div class="color-pick">
               <label>Tu color:</label>
@@ -93,9 +107,10 @@
       <!-- APP PRINCIPAL -->
       <section id="main-app" class="view">
         <header>
-          <div class="logo">NicoPlan</div>
+          <div class="logo">TurnosKids</div>
           <div class="user-info">
             <span id="logged-user-name"></span>
+            <button id="btn-toggle-dark" class="btn-icon" title="Modo oscuro">&#9790;</button>
             <button id="btn-logout" class="btn-small">Salir</button>
           </div>
         </header>
@@ -117,11 +132,20 @@
             </div>
             <div class="calendar-grid" id="calendar-grid"></div>
             <div class="calendar-legend" id="calendar-legend"></div>
+            <div class="export-section">
+              <button id="btn-export-month" class="btn btn-small-outline">Compartir resumen del mes</button>
+            </div>
           </div>
 
           <!-- Vista Semanal -->
           <div id="weekly-view" class="tab-content hidden">
-            <h2 id="current-week-display"></h2>
+            <div class="week-header">
+              <h2 id="current-week-display"></h2>
+              <div class="week-actions">
+                <button id="btn-copy-week" class="btn-small" title="Copiar semana">Copiar</button>
+                <button id="btn-paste-week" class="btn-small" title="Pegar semana" disabled>Pegar</button>
+              </div>
+            </div>
             <div class="table-container">
               <table>
                 <thead>
@@ -252,10 +276,28 @@
             <div class="settings-section danger-zone">
               <h3>Zona peligrosa</h3>
               <button id="btn-leave-group" class="btn btn-danger">Abandonar grupo</button>
+              <button id="btn-delete-group" class="btn btn-danger" hidden>Eliminar grupo (irreversible)</button>
             </div>
           </div>
         </main>
       </section>
+
+      <!-- MODAL: Detalle del dia -->
+      <div id="day-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h2 id="day-modal-title"></h2>
+            <button id="day-modal-close" class="btn-icon">&#10005;</button>
+          </div>
+          <div id="day-modal-body"></div>
+          <div class="modal-footer">
+            <button id="day-modal-full" class="btn btn-small-outline">Dia completo para...</button>
+            <div id="day-modal-full-options" class="hidden">
+              <div id="day-modal-member-btns"></div>
+            </div>
+          </div>
+        </div>
+      </div>
 
     </div>
     <script type="module" src="/src/main.js"></script>

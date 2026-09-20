@@ -7,18 +7,19 @@ import {
   createUserWithEmailAndPassword,
   signInWithPopup,
   signOut,
-  updateProfile
+  updateProfile,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import Tesseract from 'tesseract.js';
 
 // ----------------------
 // 1. STATE
 // ----------------------
-let currentUser = null;   // Firebase Auth user
-let userProfile = null;   // { grupoId, nombre, memberId }
+let currentUser = null;
+let userProfile = null;
 let grupoId = null;
-let grupoData = null;     // { info, miembros, config, semanas, horarios }
-let members = {};         // { memberId: { nombre, color, colorLight, uid } }
+let grupoData = null;
+let members = {};
 let myMemberId = null;
 
 let currentYear = new Date().getFullYear();
@@ -28,6 +29,7 @@ let currentWeekDates = [];
 let dbData = { semanas: {}, horarios: {} };
 
 let groupListener = null;
+let copiedWeekData = null;
 
 const COLORS = [
   { color: '#3b82f6', light: '#eff6ff', name: 'Azul' },
@@ -92,25 +94,61 @@ function setupAuth() {
     e.preventDefault();
     document.getElementById('auth-login-form').classList.add('hidden');
     document.getElementById('auth-register-form').classList.remove('hidden');
+    document.getElementById('auth-reset-form').classList.add('hidden');
     hideAuthError();
+    hideAuthSuccess();
   });
 
   document.getElementById('link-to-login').addEventListener('click', (e) => {
     e.preventDefault();
     document.getElementById('auth-register-form').classList.add('hidden');
     document.getElementById('auth-login-form').classList.remove('hidden');
+    document.getElementById('auth-reset-form').classList.add('hidden');
     hideAuthError();
+    hideAuthSuccess();
+  });
+
+  document.getElementById('link-forgot-password').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('auth-login-form').classList.add('hidden');
+    document.getElementById('auth-register-form').classList.add('hidden');
+    document.getElementById('auth-reset-form').classList.remove('hidden');
+    document.getElementById('reset-email').value = document.getElementById('auth-email').value;
+    hideAuthError();
+    hideAuthSuccess();
+  });
+
+  document.getElementById('link-back-to-login').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('auth-reset-form').classList.add('hidden');
+    document.getElementById('auth-login-form').classList.remove('hidden');
+    hideAuthError();
+    hideAuthSuccess();
+  });
+
+  document.getElementById('btn-send-reset').addEventListener('click', async () => {
+    const email = document.getElementById('reset-email').value.trim();
+    if (!email) return showAuthError('Introduce tu correo electronico');
+    try {
+      await sendPasswordResetEmail(auth, email);
+      hideAuthError();
+      showAuthSuccess('Enlace de recuperacion enviado! Revisa tu correo (y la carpeta de spam).');
+    } catch (e) {
+      showAuthError(getAuthErrorMsg(e.code));
+    }
   });
 
   document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
   document.getElementById('btn-auth-logout-onboarding').addEventListener('click', () => signOut(auth));
 
-  // Auth password enter key
   document.getElementById('auth-password').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') document.getElementById('btn-auth-login').click();
   });
   document.getElementById('reg-password').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') document.getElementById('btn-auth-register').click();
+  });
+  document.getElementById('reset-email').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('btn-send-reset').click();
   });
 }
 
@@ -122,6 +160,16 @@ function showAuthError(msg) {
 
 function hideAuthError() {
   document.getElementById('auth-error').classList.add('hidden');
+}
+
+function showAuthSuccess(msg) {
+  const el = document.getElementById('auth-success');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+function hideAuthSuccess() {
+  document.getElementById('auth-success').classList.add('hidden');
 }
 
 function getAuthErrorMsg(code) {
@@ -138,7 +186,26 @@ function getAuthErrorMsg(code) {
 }
 
 // ----------------------
-// 4. ONBOARDING (Crear/Unirse a grupo)
+// 4. DARK MODE
+// ----------------------
+function setupDarkMode() {
+  const saved = localStorage.getItem('turnoskids-dark');
+  if (saved === 'true') document.documentElement.setAttribute('data-theme', 'dark');
+
+  document.getElementById('btn-toggle-dark').addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('turnoskids-dark', 'false');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem('turnoskids-dark', 'true');
+    }
+  });
+}
+
+// ----------------------
+// 5. ONBOARDING (Crear/Unirse a grupo)
 // ----------------------
 function setupOnboarding() {
   renderColorOptions('create-color-options');
@@ -296,7 +363,7 @@ function hideOnboardingError() {
 }
 
 // ----------------------
-// 5. LOAD USER & GROUP
+// 6. LOAD USER & GROUP
 // ----------------------
 async function loadUserGroup() {
   const snap = await get(dbRef(db, `usuarios/${currentUser.uid}`));
@@ -320,8 +387,17 @@ function listenToGroup() {
   groupListener = onValue(groupRef, (snapshot) => {
     const data = snapshot.val();
     if (!data) {
+      off(dbRef(db, `grupos/${grupoId}`));
+      groupListener = null;
+      set(dbRef(db, `usuarios/${currentUser.uid}`), null);
       grupoId = null;
+      grupoData = null;
+      members = {};
+      myMemberId = null;
+      dbData = { semanas: {}, horarios: {} };
       showView('onboarding-view');
+      const name = currentUser.displayName || currentUser.email?.split('@')[0] || '';
+      document.getElementById('onboarding-greeting').textContent = `Hola ${name}! Tu grupo fue eliminado. Puedes crear uno nuevo o unirte a otro.`;
       return;
     }
 
@@ -377,7 +453,7 @@ function getMemberIds() {
 }
 
 // ----------------------
-// 6. TABS & EVENT LISTENERS
+// 7. TABS & EVENT LISTENERS
 // ----------------------
 function setupTabs() {
   document.querySelectorAll('.tab').forEach(tab => {
@@ -395,6 +471,10 @@ function setupTabs() {
   document.getElementById('next-month').addEventListener('click', () => changeMonth(1));
   document.getElementById('btn-upload-horario').addEventListener('click', uploadHorario);
   document.getElementById('foto-horario').addEventListener('change', handleFotoChange);
+  document.getElementById('btn-export-month').addEventListener('click', exportMonth);
+
+  document.getElementById('btn-copy-week').addEventListener('click', copyWeek);
+  document.getElementById('btn-paste-week').addEventListener('click', pasteWeek);
 
   document.getElementById('btn-add-note').addEventListener('click', async () => {
     const textEl = document.getElementById('new-note-text');
@@ -408,7 +488,7 @@ function setupTabs() {
 }
 
 // ----------------------
-// 7. CALENDAR (MONTH)
+// 8. CALENDAR (MONTH)
 // ----------------------
 function changeMonth(delta) {
   currentMonth += delta;
@@ -460,7 +540,7 @@ function renderMonth() {
     const el = document.createElement('div');
     el.className = 'cal-day';
     el.innerHTML = `<span class="date-num">${i}</span><div class="turn-dots"></div>`;
-    el.addEventListener('click', () => openWeek(weekId, d));
+    el.addEventListener('click', () => openDayModal(dateStr, weekId));
 
     if (dateStr === getISODateStr(new Date())) el.classList.add('today');
 
@@ -510,7 +590,104 @@ function renderLegend() {
 }
 
 // ----------------------
-// 8. WEEKLY VIEW & EDIT
+// 9. DAY DETAIL MODAL
+// ----------------------
+function openDayModal(dateStr, weekId) {
+  const modal = document.getElementById('day-modal');
+  const d = new Date(dateStr);
+  const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
+  const isWeekend = (d.getDay() === 0 || d.getDay() === 6);
+
+  document.getElementById('day-modal-title').textContent =
+    `${dayNames[d.getDay()]} ${d.getDate()}/${d.getMonth() + 1}`;
+
+  const body = document.getElementById('day-modal-body');
+  const dayData = dbData.semanas[weekId]?.dias?.[dateStr] || {};
+  const memberIds = getMemberIds();
+
+  const turnos = isWeekend
+    ? [{ id: 'dia', name: 'Dia completo' }, { id: 'dormir', name: 'Dormir' }]
+    : [
+      { id: 'llevar', name: 'Llevar' },
+      { id: 'recoger', name: 'Recoger' },
+      { id: 'tarde', name: 'Tarde' },
+      { id: 'dormir', name: 'Dormir' }
+    ];
+
+  body.innerHTML = turnos.map(t => {
+    const val = dayData[t.id] || '';
+    let options = '<option value="">-- Sin asignar --</option>';
+    memberIds.forEach(mid => {
+      options += `<option value="${mid}" ${val === mid ? 'selected' : ''}>${getMemberName(mid)}</option>`;
+    });
+    options += `<option value="dudas" ${val === 'dudas' ? 'selected' : ''}>? Dudas</option>`;
+
+    return `
+      <div class="modal-body-row">
+        <label>${t.name}</label>
+        <select class="modal-turn-select" data-turno="${t.id}"
+          style="${val && val !== 'dudas' ? `color:${getMemberColor(val)};border-color:${getMemberColor(val)}` : ''}">
+          ${options}
+        </select>
+      </div>
+    `;
+  }).join('');
+
+  body.querySelectorAll('.modal-turn-select').forEach(sel => {
+    sel.addEventListener('change', async (e) => {
+      const turno = e.target.dataset.turno;
+      const value = e.target.value;
+      const refPath = dbRef(db, `grupos/${grupoId}/semanas/${weekId}/dias/${dateStr}/${turno}`);
+      await set(refPath, value || null);
+
+      if (value && value !== 'dudas') {
+        e.target.style.color = getMemberColor(value);
+        e.target.style.borderColor = getMemberColor(value);
+      } else {
+        e.target.style.color = '';
+        e.target.style.borderColor = '';
+      }
+    });
+  });
+
+  const fullBtn = document.getElementById('day-modal-full');
+  const fullOptions = document.getElementById('day-modal-full-options');
+  const memberBtns = document.getElementById('day-modal-member-btns');
+  fullOptions.classList.add('hidden');
+
+  fullBtn.onclick = () => fullOptions.classList.toggle('hidden');
+
+  memberBtns.innerHTML = '';
+  memberIds.forEach(mid => {
+    const btn = document.createElement('button');
+    btn.className = 'member-pick-btn';
+    btn.textContent = getMemberName(mid);
+    btn.style.color = getMemberColor(mid);
+    btn.style.borderColor = getMemberColor(mid);
+    btn.addEventListener('click', async () => {
+      const allTurnos = isWeekend
+        ? { dia: mid, dormir: mid }
+        : { llevar: mid, recoger: mid, tarde: mid, dormir: mid };
+      await set(dbRef(db, `grupos/${grupoId}/semanas/${weekId}/dias/${dateStr}`), allTurnos);
+      closeDayModal();
+    });
+    memberBtns.appendChild(btn);
+  });
+
+  modal.classList.remove('hidden');
+
+  document.getElementById('day-modal-close').onclick = closeDayModal;
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeDayModal();
+  });
+}
+
+function closeDayModal() {
+  document.getElementById('day-modal').classList.add('hidden');
+}
+
+// ----------------------
+// 10. WEEKLY VIEW & EDIT
 // ----------------------
 function openWeek(weekId, dateObj) {
   currentWeekId = weekId;
@@ -633,7 +810,39 @@ function renderWeek(weekId) {
 }
 
 // ----------------------
-// 9. NOTAS SEMANALES
+// 11. COPY / PASTE WEEK
+// ----------------------
+function copyWeek() {
+  if (!currentWeekId) return;
+  const weekData = dbData.semanas[currentWeekId]?.dias || {};
+  copiedWeekData = {};
+
+  currentWeekDates.forEach((dateStr, idx) => {
+    const dayData = weekData[dateStr];
+    if (dayData) {
+      copiedWeekData[idx] = { ...dayData };
+    }
+  });
+
+  document.getElementById('btn-paste-week').disabled = false;
+  document.getElementById('btn-copy-week').textContent = 'Copiada!';
+  setTimeout(() => { document.getElementById('btn-copy-week').textContent = 'Copiar'; }, 1500);
+}
+
+async function pasteWeek() {
+  if (!currentWeekId || !copiedWeekData) return;
+  if (!confirm('Pegar los turnos copiados en esta semana? Se sobreescribiran los turnos actuales.')) return;
+
+  for (const [idx, dayData] of Object.entries(copiedWeekData)) {
+    const dateStr = currentWeekDates[parseInt(idx)];
+    if (dateStr) {
+      await set(dbRef(db, `grupos/${grupoId}/semanas/${currentWeekId}/dias/${dateStr}`), dayData);
+    }
+  }
+}
+
+// ----------------------
+// 12. NOTAS SEMANALES
 // ----------------------
 function renderNotes(weekId) {
   const container = document.getElementById('notes-list');
@@ -707,7 +916,7 @@ function editNote(noteId, oldText) {
 }
 
 // ----------------------
-// 10. RECUENTO SEMANAL
+// 13. RECUENTO SEMANAL
 // ----------------------
 function calcularRecuentoSemanal(weekId) {
   const counts = {};
@@ -731,21 +940,77 @@ function calcularRecuentoSemanal(weekId) {
     const pct = total === 0 ? 0 : Math.round((counts[mid] / total) * 100);
     html += `
       <p><strong>${getMemberName(mid)}:</strong> ${counts[mid]} turnos (${pct}%)</p>
-      <div style="background:#e2e8f0; height:10px; border-radius:5px; margin:5px 0 15px 0;">
+      <div style="background:var(--border-color); height:10px; border-radius:5px; margin:5px 0 15px 0;">
         <div style="background:${getMemberColor(mid)}; width:${pct}%; height:100%; border-radius:5px;"></div>
       </div>
     `;
   });
 
   if (dudas > 0) {
-    html += `<p style="color:#6b7280; font-size:0.9rem; margin-top:10px;">Hay <strong>${dudas}</strong> turno(s) marcado(s) como duda.</p>`;
+    html += `<p style="color:var(--text-secondary); font-size:0.9rem; margin-top:10px;">Hay <strong>${dudas}</strong> turno(s) marcado(s) como duda.</p>`;
   }
 
   document.getElementById('weekly-summary').innerHTML = html;
 }
 
 // ----------------------
-// 11. HORARIOS, OCR & AUTO-ASSIGN
+// 14. EXPORT MONTH
+// ----------------------
+function exportMonth() {
+  const date = new Date(currentYear, currentMonth, 1);
+  const monthName = date.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const dayLabels = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
+  const turnoLabels = { llevar: 'Llevar', recoger: 'Recoger', tarde: 'Tarde', dormir: 'Dormir', dia: 'Dia' };
+
+  let text = `TurnosKids - ${monthName.toUpperCase()}\n`;
+  text += '='.repeat(30) + '\n\n';
+
+  const counts = {};
+  getMemberIds().forEach(mid => { counts[mid] = 0; });
+
+  for (let i = 1; i <= daysInMonth; i++) {
+    const d = new Date(currentYear, currentMonth, i);
+    const dateStr = getISODateStr(d);
+    const weekId = `${currentYear}-W${getISOWeek(d)}`;
+    const dayData = dbData.semanas[weekId]?.dias?.[dateStr];
+
+    if (!dayData) continue;
+
+    const line = [];
+    for (const [t, label] of Object.entries(turnoLabels)) {
+      if (dayData[t]) {
+        const who = dayData[t] === 'dudas' ? '?' : getMemberName(dayData[t]);
+        line.push(`${label}: ${who}`);
+        if (dayData[t] !== 'dudas' && counts[dayData[t]] !== undefined) counts[dayData[t]]++;
+      }
+    }
+
+    if (line.length > 0) {
+      text += `${dayLabels[d.getDay()]} ${i} - ${line.join(' | ')}\n`;
+    }
+  }
+
+  text += '\n' + '-'.repeat(30) + '\n';
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  getMemberIds().forEach(mid => {
+    const pct = total === 0 ? 0 : Math.round((counts[mid] / total) * 100);
+    text += `${getMemberName(mid)}: ${counts[mid]} turnos (${pct}%)\n`;
+  });
+
+  if (navigator.share) {
+    navigator.share({ title: `TurnosKids - ${monthName}`, text }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('btn-export-month');
+      btn.textContent = 'Copiado al portapapeles!';
+      setTimeout(() => { btn.textContent = 'Compartir resumen del mes'; }, 2000);
+    });
+  }
+}
+
+// ----------------------
+// 15. HORARIOS, OCR & AUTO-ASSIGN
 // ----------------------
 async function handleFotoChange(e) {
   const file = e.target.files[0];
@@ -900,7 +1165,7 @@ function renderHorarios() {
 }
 
 // ----------------------
-// 12. SETTINGS
+// 16. SETTINGS
 // ----------------------
 function renderSettings() {
   if (!grupoData) return;
@@ -968,6 +1233,11 @@ function renderSettings() {
     });
   };
 
+  const isAdmin = members[myMemberId]?.rol === 'admin';
+  const deleteBtn = document.getElementById('btn-delete-group');
+  deleteBtn.hidden = !isAdmin;
+  if (isAdmin) deleteBtn.onclick = deleteGroup;
+
   document.getElementById('btn-save-settings').onclick = saveSettings;
   document.getElementById('btn-leave-group').onclick = leaveGroup;
 }
@@ -1033,13 +1303,55 @@ async function leaveGroup() {
   }
 }
 
+async function deleteGroup() {
+  if (!confirm('ELIMINAR GRUPO: Se borraran TODOS los datos (turnos, horarios, notas) para todos los miembros. Esta accion NO se puede deshacer.')) return;
+
+  const confirmText = prompt('Para confirmar, escribe ELIMINAR:');
+  if (confirmText !== 'ELIMINAR') return;
+
+  try {
+    const code = grupoData.info?.codigoInvitacion;
+    const deletingGrupoId = grupoId;
+
+    if (groupListener) off(dbRef(db, `grupos/${deletingGrupoId}`));
+    groupListener = null;
+
+    if (code) await set(dbRef(db, `invitaciones/${code}`), null);
+    await set(dbRef(db, `grupos/${deletingGrupoId}`), null);
+    await set(dbRef(db, `usuarios/${currentUser.uid}`), null);
+
+    grupoId = null;
+    grupoData = null;
+    members = {};
+    myMemberId = null;
+    dbData = { semanas: {}, horarios: {} };
+
+    showView('onboarding-view');
+    const name = currentUser.displayName || currentUser.email?.split('@')[0] || '';
+    document.getElementById('onboarding-greeting').textContent = `Grupo eliminado. Hola ${name}! Puedes crear un grupo nuevo o unirte a otro.`;
+  } catch (e) {
+    alert('Error al eliminar el grupo: ' + e.message);
+  }
+}
+
 // ----------------------
-// 13. INIT
+// 17. PWA
+// ----------------------
+function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/nicoplan/sw.js').catch(() => {});
+  }
+}
+
+// ----------------------
+// 18. INIT
 // ----------------------
 function init() {
   setupAuth();
+  setupDarkMode();
   setupOnboarding();
   setupTabs();
+  registerServiceWorker();
 
   onAuthStateChanged(auth, (user) => {
     if (user) {

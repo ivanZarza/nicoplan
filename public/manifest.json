@@ -1,0 +1,14 @@
+{
+  "name": "TurnosKids",
+  "short_name": "TurnosKids",
+  "description": "Organiza los turnos de custodia",
+  "start_url": "/nicoplan/",
+  "scope": "/nicoplan/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#3b82f6",
+  "icons": [
+    { "src": "icons/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml" },
+    { "src": "icons/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml" }
+  ]
+}
