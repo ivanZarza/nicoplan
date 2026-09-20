@@ -31,6 +31,34 @@ let dbData = { semanas: {}, horarios: {} };
 let groupListener = null;
 let copiedWeekData = null;
 
+const DEFAULT_TURNOS = {
+  llevar: { nombre: 'Llevar', dias: 'laborable' },
+  recoger: { nombre: 'Recoger', dias: 'laborable' },
+  tarde: { nombre: 'Tarde', dias: 'laborable' },
+  dormir: { nombre: 'Dormir', dias: 'todos' },
+  dia: { nombre: 'Dia', dias: 'finde' }
+};
+
+function getGroupTurnos() {
+  return grupoData?.config?.turnos || DEFAULT_TURNOS;
+}
+
+function getTurnosForDay(isWeekend) {
+  const turnos = getGroupTurnos();
+  return Object.entries(turnos)
+    .filter(([_, t]) => {
+      if (t.dias === 'todos') return true;
+      if (t.dias === 'laborable') return !isWeekend;
+      if (t.dias === 'finde') return isWeekend;
+      return true;
+    })
+    .map(([id, t]) => ({ id, name: t.nombre }));
+}
+
+function getAllTurnoIds() {
+  return Object.keys(getGroupTurnos());
+}
+
 const COLORS = [
   { color: '#3b82f6', light: '#eff6ff', name: 'Azul' },
   { color: '#f97316', light: '#fff7ed', name: 'Naranja' },
@@ -289,6 +317,7 @@ async function createGroup() {
         }
       },
       config: {
+        turnos: { ...DEFAULT_TURNOS },
         autoAsignacion: {
           enabled: false,
           horaEntradaLimite: '09:00',
@@ -549,7 +578,7 @@ function renderMonth() {
       let dotsHtml = '';
       let turnosAsignados = 0;
 
-      ['llevar', 'recoger', 'tarde', 'dormir', 'dia'].forEach(turno => {
+      getAllTurnoIds().forEach(turno => {
         if (dayData[turno] && dayData[turno] !== 'dudas') {
           dotsHtml += `<div class="dot" style="background:${getMemberColor(dayData[turno])}"></div>`;
           turnosAsignados++;
@@ -561,7 +590,7 @@ function renderMonth() {
       el.querySelector('.turn-dots').innerHTML = dotsHtml;
 
       const isWeekend = (d.getDay() === 0 || d.getDay() === 6);
-      const turnosNecesarios = isWeekend ? 2 : 4;
+      const turnosNecesarios = getTurnosForDay(isWeekend).length;
       if (turnosAsignados > 0 && turnosAsignados < turnosNecesarios) {
         el.classList.add('day-partial');
       } else if (turnosAsignados >= turnosNecesarios) {
@@ -605,14 +634,7 @@ function openDayModal(dateStr, weekId) {
   const dayData = dbData.semanas[weekId]?.dias?.[dateStr] || {};
   const memberIds = getMemberIds();
 
-  const turnos = isWeekend
-    ? [{ id: 'dia', name: 'Dia completo' }, { id: 'dormir', name: 'Dormir' }]
-    : [
-      { id: 'llevar', name: 'Llevar' },
-      { id: 'recoger', name: 'Recoger' },
-      { id: 'tarde', name: 'Tarde' },
-      { id: 'dormir', name: 'Dormir' }
-    ];
+  const turnos = getTurnosForDay(isWeekend);
 
   body.innerHTML = turnos.map(t => {
     const val = dayData[t.id] || '';
@@ -665,9 +687,8 @@ function openDayModal(dateStr, weekId) {
     btn.style.color = getMemberColor(mid);
     btn.style.borderColor = getMemberColor(mid);
     btn.addEventListener('click', async () => {
-      const allTurnos = isWeekend
-        ? { dia: mid, dormir: mid }
-        : { llevar: mid, recoger: mid, tarde: mid, dormir: mid };
+      const allTurnos = {};
+      turnos.forEach(t => { allTurnos[t.id] = mid; });
       await set(dbRef(db, `grupos/${grupoId}/semanas/${weekId}/dias/${dateStr}`), allTurnos);
       closeDayModal();
     });
@@ -741,19 +762,14 @@ function renderWeek(weekId) {
 
   renderNotes(weekId);
 
-  const turnosLV = [
-    { id: 'llevar', name: 'Llevar' },
-    { id: 'recoger', name: 'Recoger' },
-    { id: 'tarde', name: 'Tarde' }
-  ];
-  const turnoDormir = { id: 'dormir', name: 'Dormir' };
-  const turnoDia = { id: 'dia', name: 'Dia' };
+  const allTurnos = getGroupTurnos();
+  const turnosList = Object.entries(allTurnos).map(([id, t]) => ({ id, name: t.nombre, dias: t.dias }));
 
   const memberIds = getMemberIds();
 
-  const getSelect = (dateStr, turnoId, isWeekend, isLVOnly) => {
-    if (isWeekend && isLVOnly) return '<td>—</td>';
-    if (!isWeekend && turnoId === 'dia') return '<td>—</td>';
+  const getSelect = (dateStr, turnoId, isWeekend, turnDias) => {
+    if (isWeekend && turnDias === 'laborable') return '<td>—</td>';
+    if (!isWeekend && turnDias === 'finde') return '<td>—</td>';
 
     const dayData = dbData.semanas[weekId]?.dias?.[dateStr] || {};
     const val = dayData[turnoId] || '';
@@ -775,18 +791,16 @@ function renderWeek(weekId) {
     </td>`;
   };
 
-  const renderRow = (turno, isLVOnly) => {
+  const renderRow = (turno) => {
     let html = `<tr><td>${turno.name}</td>`;
     currentWeekDates.forEach((dateStr, idx) => {
-      html += getSelect(dateStr, turno.id, idx >= 5, isLVOnly);
+      html += getSelect(dateStr, turno.id, idx >= 5, turno.dias);
     });
     html += `</tr>`;
     return html;
   };
 
-  turnosLV.forEach(t => { tbody.innerHTML += renderRow(t, true); });
-  tbody.innerHTML += renderRow(turnoDia, false);
-  tbody.innerHTML += renderRow(turnoDormir, false);
+  turnosList.forEach(t => { tbody.innerHTML += renderRow(t); });
 
   document.querySelectorAll('.turn-selector').forEach(sel => {
     sel.addEventListener('change', async (e) => {
@@ -927,7 +941,7 @@ function calcularRecuentoSemanal(weekId) {
   currentWeekDates.forEach(dateStr => {
     const d = dbData.semanas[weekId]?.dias?.[dateStr];
     if (!d) return;
-    ['llevar', 'recoger', 'tarde', 'dormir', 'dia'].forEach(t => {
+    getAllTurnoIds().forEach(t => {
       if (d[t] === 'dudas') { dudas++; return; }
       if (d[t] && counts[d[t]] !== undefined) counts[d[t]]++;
     });
@@ -961,7 +975,9 @@ function exportMonth() {
   const monthName = date.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const dayLabels = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
-  const turnoLabels = { llevar: 'Llevar', recoger: 'Recoger', tarde: 'Tarde', dormir: 'Dormir', dia: 'Dia' };
+  const turnosConfig = getGroupTurnos();
+  const turnoLabels = {};
+  for (const [id, t] of Object.entries(turnosConfig)) turnoLabels[id] = t.nombre;
 
   let text = `TurnosKids - ${monthName.toUpperCase()}\n`;
   text += '='.repeat(30) + '\n\n';
@@ -1238,8 +1254,135 @@ function renderSettings() {
   deleteBtn.hidden = !isAdmin;
   if (isAdmin) deleteBtn.onclick = deleteGroup;
 
+  const editCodeBtn = document.getElementById('btn-edit-code');
+  editCodeBtn.hidden = !isAdmin;
+
+  editCodeBtn.onclick = () => {
+    document.getElementById('edit-code-form').classList.remove('hidden');
+    document.getElementById('new-invite-code').value = grupoData.info?.codigoInvitacion || '';
+    document.getElementById('code-edit-error').classList.add('hidden');
+  };
+
+  document.getElementById('btn-cancel-code').onclick = () => {
+    document.getElementById('edit-code-form').classList.add('hidden');
+  };
+
+  document.getElementById('btn-save-code').onclick = changeInviteCode;
+
+  renderTurnosList();
+  document.getElementById('btn-add-turno').onclick = addTurno;
+
   document.getElementById('btn-save-settings').onclick = saveSettings;
   document.getElementById('btn-leave-group').onclick = leaveGroup;
+}
+
+async function changeInviteCode() {
+  const newCode = document.getElementById('new-invite-code').value.trim().toUpperCase();
+  const errorEl = document.getElementById('code-edit-error');
+
+  if (!newCode) { errorEl.textContent = 'Introduce un codigo'; errorEl.classList.remove('hidden'); return; }
+  if (newCode.length < 4 || newCode.length > 6) { errorEl.textContent = 'El codigo debe tener entre 4 y 6 caracteres'; errorEl.classList.remove('hidden'); return; }
+  if (!/^[A-Z0-9]+$/.test(newCode)) { errorEl.textContent = 'Solo letras y numeros'; errorEl.classList.remove('hidden'); return; }
+
+  const oldCode = grupoData.info?.codigoInvitacion;
+  if (newCode === oldCode) { document.getElementById('edit-code-form').classList.add('hidden'); return; }
+
+  try {
+    const existing = await get(dbRef(db, `invitaciones/${newCode}`));
+    if (existing.exists()) { errorEl.textContent = 'Ese codigo ya esta en uso'; errorEl.classList.remove('hidden'); return; }
+
+    if (oldCode) await set(dbRef(db, `invitaciones/${oldCode}`), null);
+    await set(dbRef(db, `invitaciones/${newCode}`), grupoId);
+    await set(dbRef(db, `grupos/${grupoId}/info/codigoInvitacion`), newCode);
+    document.getElementById('edit-code-form').classList.add('hidden');
+  } catch (e) {
+    errorEl.textContent = 'Error: ' + e.message;
+    errorEl.classList.remove('hidden');
+  }
+}
+
+function renderTurnosList() {
+  const container = document.getElementById('turnos-list');
+  const turnos = getGroupTurnos();
+  const diasLabels = { laborable: 'L-V', finde: 'S-D', todos: 'Todos' };
+
+  container.innerHTML = '';
+  Object.entries(turnos).forEach(([id, t]) => {
+    const row = document.createElement('div');
+    row.className = 'turno-row';
+    row.innerHTML = `
+      <span class="turno-name">${t.nombre}</span>
+      <span class="turno-dias-badge turno-dias-${t.dias}">${diasLabels[t.dias] || t.dias}</span>
+      <button class="btn-small" data-action="rename" data-id="${id}">Renombrar</button>
+      <button class="btn-small" data-action="delete" data-id="${id}" style="color:#ef4444;border-color:#fecaca;">&#10005;</button>
+    `;
+    container.appendChild(row);
+  });
+
+  container.querySelectorAll('[data-action="rename"]').forEach(btn => {
+    btn.addEventListener('click', () => renameTurno(btn.dataset.id));
+  });
+  container.querySelectorAll('[data-action="delete"]').forEach(btn => {
+    btn.addEventListener('click', () => deleteTurno(btn.dataset.id));
+  });
+}
+
+async function addTurno() {
+  const nameInput = document.getElementById('new-turno-name');
+  const name = nameInput.value.trim();
+  const dias = document.getElementById('new-turno-dias').value;
+  const msgEl = document.getElementById('turnos-msg');
+
+  if (!name) { msgEl.textContent = 'Escribe un nombre para el turno'; msgEl.style.color = '#ef4444'; msgEl.classList.remove('hidden'); return; }
+
+  const id = name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
+  if (!id) { msgEl.textContent = 'El nombre debe contener letras o numeros'; msgEl.style.color = '#ef4444'; msgEl.classList.remove('hidden'); return; }
+
+  const turnos = { ...getGroupTurnos() };
+  if (turnos[id]) { msgEl.textContent = 'Ya existe un turno con ese identificador'; msgEl.style.color = '#ef4444'; msgEl.classList.remove('hidden'); return; }
+
+  turnos[id] = { nombre: name, dias };
+  try {
+    await set(dbRef(db, `grupos/${grupoId}/config/turnos`), turnos);
+    nameInput.value = '';
+    msgEl.textContent = 'Turno añadido';
+    msgEl.style.color = '#10b981';
+    msgEl.classList.remove('hidden');
+    setTimeout(() => msgEl.classList.add('hidden'), 2000);
+  } catch (e) {
+    msgEl.textContent = 'Error: ' + e.message;
+    msgEl.style.color = '#ef4444';
+    msgEl.classList.remove('hidden');
+  }
+}
+
+async function renameTurno(turnoId) {
+  const turnos = { ...getGroupTurnos() };
+  const currentName = turnos[turnoId]?.nombre || turnoId;
+  const newName = prompt(`Nuevo nombre para "${currentName}":`, currentName);
+  if (!newName || newName.trim() === currentName) return;
+
+  turnos[turnoId] = { ...turnos[turnoId], nombre: newName.trim() };
+  try {
+    await set(dbRef(db, `grupos/${grupoId}/config/turnos`), turnos);
+  } catch (e) {
+    alert('Error al renombrar: ' + e.message);
+  }
+}
+
+async function deleteTurno(turnoId) {
+  const turnos = { ...getGroupTurnos() };
+  if (Object.keys(turnos).length <= 1) { alert('Debe haber al menos un turno'); return; }
+
+  const name = turnos[turnoId]?.nombre || turnoId;
+  if (!confirm(`Eliminar el turno "${name}"? Los datos ya asignados se mantendran pero no se mostraran.`)) return;
+
+  delete turnos[turnoId];
+  try {
+    await set(dbRef(db, `grupos/${grupoId}/config/turnos`), turnos);
+  } catch (e) {
+    alert('Error al eliminar: ' + e.message);
+  }
 }
 
 async function saveSettings() {

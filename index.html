@@ -205,13 +205,48 @@
                 <div class="invite-code-box">
                   <span id="setting-invite-code" class="invite-code"></span>
                   <button id="btn-copy-code" class="btn-small">Copiar</button>
+                  <button id="btn-edit-code" class="btn-small" hidden>Editar</button>
                 </div>
+              </div>
+              <div id="edit-code-form" class="hidden" style="margin-top:10px;">
+                <div class="setting-row">
+                  <label>Nuevo codigo (4-6 caracteres):</label>
+                  <input type="text" id="new-invite-code" maxlength="6" placeholder="Ej: NICO26" style="text-transform:uppercase; letter-spacing:3px; text-align:center;">
+                </div>
+                <div style="display:flex; gap:8px; justify-content:flex-end;">
+                  <button id="btn-cancel-code" class="btn-small">Cancelar</button>
+                  <button id="btn-save-code" class="btn btn-primary" style="width:auto; padding:8px 20px;">Guardar codigo</button>
+                </div>
+                <p id="code-edit-error" class="error-msg hidden" style="margin-top:8px;"></p>
               </div>
             </div>
 
             <div class="settings-section">
               <h3>Miembros</h3>
               <div id="members-list" class="members-list"></div>
+            </div>
+
+            <div class="settings-section">
+              <h3>Turnos</h3>
+              <p class="setting-hint">Configura los turnos que se asignan cada dia. Puedes añadir, renombrar o eliminar turnos.</p>
+              <div id="turnos-list"></div>
+              <div style="margin-top:15px; padding-top:15px; border-top:1px dashed var(--border-color);">
+                <h4 style="margin-bottom:10px; font-size:0.9rem;">Añadir turno</h4>
+                <div class="setting-row">
+                  <label>Nombre:</label>
+                  <input type="text" id="new-turno-name" placeholder="Ej: Merienda">
+                </div>
+                <div class="setting-row">
+                  <label>Dias:</label>
+                  <select id="new-turno-dias">
+                    <option value="laborable">Solo laborables (L-V)</option>
+                    <option value="finde">Solo fin de semana (S-D)</option>
+                    <option value="todos">Todos los dias</option>
+                  </select>
+                </div>
+                <button id="btn-add-turno" class="btn btn-primary" style="width:auto; padding:8px 20px;">Añadir turno</button>
+              </div>
+              <p id="turnos-msg" class="hidden" style="margin-top:10px; text-align:center;"></p>
             </div>
 
             <div class="settings-section">
