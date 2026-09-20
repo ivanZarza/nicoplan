@@ -64,7 +64,10 @@
 
           <div id="create-group-form" class="hidden">
             <h3>Crear grupo</h3>
-            <input type="text" id="group-name" placeholder="Nombre del grupo (ej: Plan Verano)">
+            <label class="input-label" for="group-name">Nombre del grupo</label>
+            <input type="text" id="group-name" placeholder="Ej: Plan Verano">
+            <label class="input-label" for="group-invite-code">Codigo de invitacion (6 caracteres, lo compartiras con tu pareja)</label>
+            <input type="text" id="group-invite-code" maxlength="6" placeholder="Ej: NICO26" style="text-transform:uppercase; letter-spacing:4px; text-align:center;">
             <div class="color-pick">
               <label>Tu color:</label>
               <div class="color-options" id="create-color-options"></div>

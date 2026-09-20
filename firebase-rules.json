@@ -16,9 +16,13 @@
       "$grupoId": {
         ".read": "auth != null && root.child('usuarios').child(auth.uid).child('grupoId').val() === $grupoId",
         ".write": "auth != null && (root.child('usuarios').child(auth.uid).child('grupoId').val() === $grupoId || !data.exists())",
+        "info": {
+          ".read": "auth != null"
+        },
         "miembros": {
+          ".read": "auth != null",
           "$uid": {
-            ".write": "auth != null && (auth.uid === $uid || root.child('usuarios').child(auth.uid).child('grupoId').val() === $grupoId)"
+            ".write": "auth != null && auth.uid === $uid"
           }
         }
       }

@@ -196,7 +196,13 @@ async function createGroup() {
   if (!groupName) return showOnboardingError('Pon un nombre al grupo');
 
   const color = getSelectedColor('create-color-options');
-  const code = generateInviteCode();
+  let code = document.getElementById('group-invite-code').value.trim().toUpperCase();
+  if (!code) code = generateInviteCode();
+  if (code.length < 4 || code.length > 6) return showOnboardingError('El codigo debe tener entre 4 y 6 caracteres');
+  if (!/^[A-Z0-9]+$/.test(code)) return showOnboardingError('El codigo solo puede tener letras y numeros');
+
+  const existingCode = await get(dbRef(db, `invitaciones/${code}`));
+  if (existingCode.exists()) return showOnboardingError('Ese codigo ya esta en uso, elige otro');
   const userName = currentUser.displayName || currentUser.email.split('@')[0];
   const memberId = userName.toLowerCase().replace(/[^a-z0-9]/g, '');
 
